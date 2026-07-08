@@ -40,7 +40,6 @@ func (q *Queries) GetBook(ctx context.Context, bookID interface{}) (GetBookRow, 
 		&relationPlaceholder,
 	)
 	if err == nil {
-		// Load relation GetBookAuthors
 		{
 			var paramVal int64
 			switch val := i.BookID.(type) {
@@ -142,7 +141,6 @@ func (q *Queries) GetBooks(ctx context.Context) ([]GetBooksRow, error) {
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
-	// Batch load relation GetBooksAuthors to avoid N+1 queries
 	{
 		relIDs := make([]int64, 0, len(items))
 		for _, item := range items {
@@ -180,14 +178,20 @@ func (q *Queries) GetBooks(ctx context.Context) ([]GetBooksRow, error) {
 }
 
 const getBooksAuthors = `-- name: GetBooksAuthors :many
-SELECT book_authors.book_id, authors.first_name FROM book_authors 
+SELECT authors.id, authors.first_name, authors.last_name, book_authors.book_id FROM book_authors 
 INNER JOIN authors ON book_authors.author_id = authors.id
 WHERE book_authors.book_id IN (/*SLICE:book_ids*/?)
 `
 
 type GetBooksAuthorsRow struct {
-	BookID    int64
+	ID        interface{}
 	FirstName string
+	LastName  string
+	BookID    int64
+}
+
+func (s GetBooksAuthorsRow) GetID() interface{} {
+	return s.ID
 }
 
 func (q *Queries) GetBooksAuthors(ctx context.Context, bookIds []int64) ([]GetBooksAuthorsRow, error) {
@@ -210,7 +214,12 @@ func (q *Queries) GetBooksAuthors(ctx context.Context, bookIds []int64) ([]GetBo
 
 	for rows.Next() {
 		var i GetBooksAuthorsRow
-		if err := rows.Scan(&i.BookID, &i.FirstName); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.FirstName,
+			&i.LastName,
+			&i.BookID,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

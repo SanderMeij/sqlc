@@ -498,7 +498,6 @@ func (t *tmplCtx) codegenLoadRelations(q Query) string {
 		}
 
 		if q.Cmd == ":one" {
-			sb.WriteString(fmt.Sprintf("\t// Load relation %s\n", f.Name))
 			sb.WriteString("\t{\n")
 			if matchField.Type != param.Type && !strings.HasPrefix(param.Type, "[]") {
 				sb.WriteString(fmt.Sprintf("\t\tvar paramVal %s\n", param.Type))
@@ -534,7 +533,6 @@ func (t *tmplCtx) codegenLoadRelations(q Query) string {
 		} else if q.Cmd == ":many" {
 			if rq.Arg.HasSqlcSlices() {
 				// Batch loading! No N+1 queries!
-				sb.WriteString(fmt.Sprintf("\t// Batch load relation %s to avoid N+1 queries\n", f.Name))
 				sb.WriteString("\t{\n")
 				sliceType := strings.TrimPrefix(param.Type, "[]")
 				sb.WriteString(fmt.Sprintf("\t\trelIDs := make([]%s, 0, len(items))\n", sliceType))
@@ -597,7 +595,6 @@ func (t *tmplCtx) codegenLoadRelations(q Query) string {
 				sb.WriteString("\t\t}\n")
 				sb.WriteString("\t}\n")
 			} else {
-				sb.WriteString(fmt.Sprintf("\t// Load relation %s for all items\n", f.Name))
 				sb.WriteString("\tfor idx := range items {\n")
 				if matchField.Type != param.Type {
 					sb.WriteString(fmt.Sprintf("\t\tvar paramVal %s\n", param.Type))

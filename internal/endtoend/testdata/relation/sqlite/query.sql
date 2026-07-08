@@ -7,7 +7,7 @@ WHERE book_authors.book_id = ?;
 SELECT books.*, sqlc.relation('GetBookAuthors') from books WHERE book_id = ?;
 
 -- name: GetBooksAuthors :many
-SELECT book_authors.book_id, authors.first_name FROM book_authors 
+SELECT authors.id, authors.first_name, authors.last_name, book_authors.book_id FROM book_authors 
 INNER JOIN authors ON book_authors.author_id = authors.id
 WHERE book_authors.book_id IN (sqlc.slice(book_ids));
 

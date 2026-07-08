@@ -20,3 +20,4 @@ CREATE TABLE book_authors (
           author_id integer NOT NULL REFERENCES authors(id) ON DELETE CASCADE,
           PRIMARY KEY (book_id, author_id)
 );
+
