@@ -359,7 +359,7 @@ func (i *importer) queryImports(filename string) fileImports {
 			if q.hasRetType() {
 				if q.Ret.IsStruct() {
 					for _, f := range q.Ret.Struct.Fields {
-						if strings.HasPrefix(f.Type, "[]") && f.Type != "[]byte" {
+						if strings.HasPrefix(f.Type, "[]") && f.Type != "[]byte" && !f.IsRelation() {
 							return true
 						}
 						for _, embed := range f.EmbedFields {

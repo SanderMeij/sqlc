@@ -8,8 +8,6 @@ package querytest
 import (
 	"context"
 	"strings"
-
-	"github.com/lib/pq"
 )
 
 const getBook = `-- name: GetBook :one
