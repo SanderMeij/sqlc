@@ -10,6 +10,12 @@ type {{.Arg.Type}} struct { {{- range .Arg.UniqueFields}}
   {{.Name}} {{.Type}} {{if .Tag}}{{$.Q}}{{.Tag}}{{$.Q}}{{end}}
   {{- end}}
 }
+
+{{if .Arg.Struct.HasIDField}}
+func (s {{.Arg.Type}}) GetID() {{.Arg.Struct.IDFieldType}} {
+	return s.ID
+}
+{{end}}
 {{end}}
 
 {{if .Ret.EmitStruct}}
@@ -17,6 +23,12 @@ type {{.Ret.Type}} struct { {{- range .Ret.Struct.Fields}}
   {{.Name}} {{.Type}} {{if .Tag}}{{$.Q}}{{.Tag}}{{$.Q}}{{end}}
   {{- end}}
 }
+
+{{if .Ret.Struct.HasIDField}}
+func (s {{.Ret.Type}}) GetID() {{.Ret.Struct.IDFieldType}} {
+	return s.ID
+}
+{{end}}
 {{end}}
 
 {{if eq .Cmd ":one"}}

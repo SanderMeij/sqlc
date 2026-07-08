@@ -46,6 +46,32 @@ type tmplCtx struct {
 	WrapErrors                bool
 }
 
+func (t *tmplCtx) HasAnyStructWithIDField() bool {
+	for _, s := range t.Structs {
+		if s.HasIDField() {
+			return true
+		}
+	}
+	for _, q := range t.GoQueries {
+		if q.Arg.EmitStruct() {
+			for _, f := range q.Arg.UniqueFields() {
+				if f.Name == "ID" {
+					return true
+				}
+			}
+		}
+		if q.Ret.EmitStruct() {
+			for _, f := range q.Ret.Struct.Fields {
+				if f.Name == "ID" {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+
 func (t *tmplCtx) OutputQuery(sourceName string) bool {
 	return t.SourceName == sourceName
 }

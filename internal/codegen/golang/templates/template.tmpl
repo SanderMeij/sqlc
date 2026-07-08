@@ -86,6 +86,12 @@ import (
 {{end}}
 
 {{define "modelsCode"}}
+{{if .HasAnyStructWithIDField}}
+type Identifiable[T any] interface {
+	GetID() T
+}
+{{end}}
+
 {{range .Enums}}
 {{if .Comment}}{{comment .Comment}}{{end}}
 type {{.Name}} string
@@ -159,6 +165,12 @@ type {{.Name}} struct { {{- range .Fields}}
   {{.Name}} {{.Type}} {{if .Tag}}{{$.Q}}{{.Tag}}{{$.Q}}{{end}}
   {{- end}}
 }
+
+{{if .HasIDField}}
+func (s {{.Name}}) GetID() {{.IDFieldType}} {
+	return s.ID
+}
+{{end}}
 {{end}}
 {{end}}
 

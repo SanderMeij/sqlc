@@ -51,3 +51,22 @@ func StructName(name string, options *opts.Options) string {
 		return out.String()
 	}
 }
+
+func (s Struct) HasIDField() bool {
+	for _, f := range s.Fields {
+		if f.Name == "ID" {
+			return true
+		}
+	}
+	return false
+}
+
+func (s Struct) IDFieldType() string {
+	for _, f := range s.Fields {
+		if f.Name == "ID" {
+			return f.Type
+		}
+	}
+	return ""
+}
+
