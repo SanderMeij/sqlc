@@ -176,7 +176,9 @@ func (c *Compiler) _analyzeQuery(raw *ast.RawStmt, query string, failfast bool) 
 		sort.Slice(refs, func(i, j int) bool { return refs[i].ref.Number < refs[j].ref.Number })
 	}
 	raw, embeds := rewrite.Embeds(raw)
-	qc, err := c.buildQueryCatalog(c.catalog, raw.Stmt, embeds)
+	raw, relations, relationEdits := rewrite.Relations(raw)
+	edits = append(edits, relationEdits...)
+	qc, err := c.buildQueryCatalog(c.catalog, raw.Stmt, embeds, relations)
 	if err := check(err); err != nil {
 		return nil, err
 	}

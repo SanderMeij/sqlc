@@ -13,7 +13,7 @@ import (
 
 // OutputColumns determines which columns a statement will output
 func (c *Compiler) OutputColumns(stmt ast.Node) ([]*catalog.Column, error) {
-	qc, err := c.buildQueryCatalog(c.catalog, stmt, nil)
+	qc, err := c.buildQueryCatalog(c.catalog, stmt, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -131,6 +131,17 @@ func (c *Compiler) outputColumns(qc *QueryCatalog, node ast.Node) ([]*Column, er
 			name := ""
 			if res.Name != nil {
 				name = *res.Name
+			}
+			if rel, ok := qc.relations.Find(n); ok {
+				if name == "" {
+					name = rel.Name
+				}
+				cols = append(cols, &Column{
+					Name:         name,
+					OriginalName: name,
+					DataType:     "relation:" + rel.Name,
+				})
+				continue
 			}
 			switch n.Val.(type) {
 			case *ast.String:
