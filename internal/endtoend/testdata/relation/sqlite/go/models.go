@@ -13,18 +13,18 @@ type Identifiable[T any] interface {
 }
 
 type Author struct {
-	ID        interface{}
+	ID        int64
 	FirstName string
 	LastName  string
 	BirthDate time.Time
 }
 
-func (s Author) GetID() interface{} {
+func (s Author) GetID() int64 {
 	return s.ID
 }
 
 type Book struct {
-	BookID    interface{}
+	BookID    int64
 	Isbn      string
 	BookType  interface{}
 	Title     string

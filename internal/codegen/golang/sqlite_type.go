@@ -17,7 +17,7 @@ func sqliteType(req *plugin.GenerateRequest, options *opts.Options, col *plugin.
 
 	switch dt {
 
-	case "int", "integer", "tinyint", "smallint", "mediumint", "bigint", "unsignedbigint", "int2", "int8":
+	case "int", "integer", "tinyint", "smallint", "mediumint", "bigint", "unsignedbigint", "int2", "int8", "serial", "bigserial":
 		if notNull {
 			return "int64"
 		}

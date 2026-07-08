@@ -15,17 +15,17 @@ SELECT books.book_id, books.isbn, books.book_type, books.title, books.year, book
 `
 
 type GetBookRow struct {
-	BookID         interface{}
+	BookID         int64
 	Isbn           string
 	BookType       interface{}
 	Title          string
 	Year           int64
 	Available      interface{}
 	Tags           string
-	GetBookAuthors []Author
+	GetBookAuthors map[int64]Author
 }
 
-func (q *Queries) GetBook(ctx context.Context, bookID interface{}) (GetBookRow, error) {
+func (q *Queries) GetBook(ctx context.Context, bookID int64) (GetBookRow, error) {
 	row := q.db.QueryRowContext(ctx, getBook, bookID)
 	var i GetBookRow
 	var relationPlaceholder interface{}
@@ -41,20 +41,15 @@ func (q *Queries) GetBook(ctx context.Context, bookID interface{}) (GetBookRow, 
 	)
 	if err == nil {
 		{
-			var paramVal int64
-			switch val := i.BookID.(type) {
-			case int64:
-				paramVal = val
-			case int:
-				paramVal = int64(val)
-			case int32:
-				paramVal = int64(val)
-			}
-			relVal, err := q.GetBookAuthors(ctx, paramVal)
+			relVal, err := q.GetBookAuthors(ctx, i.BookID)
 			if err != nil {
 				return i, err
 			}
-			i.GetBookAuthors = relVal
+			relMap := make(map[int64]Author)
+			for _, rRow := range relVal {
+				relMap[rRow.ID] = rRow
+			}
+			i.GetBookAuthors = relMap
 		}
 	}
 	return i, err
@@ -100,14 +95,14 @@ SELECT books.book_id, books.isbn, books.book_type, books.title, books.year, book
 `
 
 type GetBooksRow struct {
-	BookID          interface{}
+	BookID          int64
 	Isbn            string
 	BookType        interface{}
 	Title           string
 	Year            int64
 	Available       interface{}
 	Tags            string
-	GetBooksAuthors []GetBooksAuthorsRow
+	GetBooksAuthors map[int64]GetBooksAuthorsRow
 }
 
 func (q *Queries) GetBooks(ctx context.Context) ([]GetBooksRow, error) {
@@ -144,33 +139,23 @@ func (q *Queries) GetBooks(ctx context.Context) ([]GetBooksRow, error) {
 	{
 		relIDs := make([]int64, 0, len(items))
 		for _, item := range items {
-			switch val := item.BookID.(type) {
-			case int64:
-				relIDs = append(relIDs, val)
-			case int:
-				relIDs = append(relIDs, int64(val))
-			case int32:
-				relIDs = append(relIDs, int64(val))
-			}
+			relIDs = append(relIDs, int64(item.BookID))
 		}
 		relRows, err := q.GetBooksAuthors(ctx, relIDs)
 		if err != nil {
 			return nil, err
 		}
-		relMap := make(map[int64][]GetBooksAuthorsRow)
+		relMap := make(map[int64]map[int64]GetBooksAuthorsRow)
 		for _, rRow := range relRows {
 			key := int64(rRow.BookID)
-			relMap[key] = append(relMap[key], rRow)
+			if relMap[key] == nil {
+				relMap[key] = make(map[int64]GetBooksAuthorsRow)
+			}
+			relMap[key][rRow.ID] = rRow
 		}
 		for idx := range items {
-			switch val := items[idx].BookID.(type) {
-			case int64:
-				items[idx].GetBooksAuthors = relMap[val]
-			case int:
-				items[idx].GetBooksAuthors = relMap[int64(val)]
-			case int32:
-				items[idx].GetBooksAuthors = relMap[int64(val)]
-			}
+			key := int64(items[idx].BookID)
+			items[idx].GetBooksAuthors = relMap[key]
 		}
 	}
 
@@ -184,13 +169,13 @@ WHERE book_authors.book_id IN (/*SLICE:book_ids*/?)
 `
 
 type GetBooksAuthorsRow struct {
-	ID        interface{}
+	ID        int64
 	FirstName string
 	LastName  string
 	BookID    int64
 }
 
-func (s GetBooksAuthorsRow) GetID() interface{} {
+func (s GetBooksAuthorsRow) GetID() int64 {
 	return s.ID
 }
 
