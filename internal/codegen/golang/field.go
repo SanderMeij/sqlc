@@ -29,6 +29,17 @@ func (gf Field) HasSqlcSlice() bool {
 	return gf.Column.IsSqlcSlice
 }
 
+func (gf Field) IsRelation() bool {
+	return gf.Column != nil && strings.HasPrefix(gf.Column.Type.Name, "relation:")
+}
+
+func (gf Field) RelationQueryName() string {
+	if gf.Column == nil {
+		return ""
+	}
+	return strings.TrimPrefix(gf.Column.Type.Name, "relation:")
+}
+
 func TagsToString(tags map[string]string) string {
 	if len(tags) == 0 {
 		return ""

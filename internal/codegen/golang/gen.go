@@ -252,6 +252,7 @@ func generate(req *plugin.GenerateRequest, options *opts.Options, enums []Enum, 
 		"emitPreparedQueries": tctx.codegenEmitPreparedQueries,
 		"queryMethod":         tctx.codegenQueryMethod,
 		"queryRetval":         tctx.codegenQueryRetval,
+		"loadRelations":       tctx.codegenLoadRelations,
 	}
 
 	tmpl := template.Must(
@@ -449,4 +450,195 @@ func filterUnusedStructs(enums []Enum, structs []Struct, queries []Query, qualif
 	}
 
 	return keepEnums, keepStructs
+}
+
+func (t *tmplCtx) codegenLoadRelations(q Query) string {
+	if q.Ret.Struct == nil {
+		return ""
+	}
+	var sb strings.Builder
+	hasRels := false
+	for _, f := range q.Ret.Struct.Fields {
+		if f.IsRelation() {
+			hasRels = true
+			break
+		}
+	}
+	if !hasRels {
+		return ""
+	}
+
+	for _, f := range q.Ret.Struct.Fields {
+		if !f.IsRelation() {
+			continue
+		}
+		relName := f.RelationQueryName()
+		var rq Query
+		found := false
+		for _, q_ := range t.GoQueries {
+			if q_.MethodName == relName {
+				rq = q_
+				found = true
+				break
+			}
+		}
+		if !found {
+			continue
+		}
+
+		pairs := rq.Arg.Pairs()
+		if len(pairs) == 0 {
+			continue
+		}
+		param := pairs[0]
+
+		matchField, ok := FindMatchingField(q.Ret.Struct.Fields, param.Name)
+		if !ok {
+			continue
+		}
+
+		if q.Cmd == ":one" {
+			sb.WriteString(fmt.Sprintf("\t// Load relation %s\n", f.Name))
+			sb.WriteString("\t{\n")
+			if matchField.Type != param.Type && !strings.HasPrefix(param.Type, "[]") {
+				sb.WriteString(fmt.Sprintf("\t\tvar paramVal %s\n", param.Type))
+				if matchField.Type == "interface{}" {
+					sb.WriteString(fmt.Sprintf("\t\tswitch val := i.%s.(type) {\n", matchField.Name))
+					sb.WriteString(fmt.Sprintf("\t\tcase %s:\n", param.Type))
+					sb.WriteString("\t\t\tparamVal = val\n")
+					if param.Type == "int64" {
+						sb.WriteString("\t\tcase int:\n\t\t\tparamVal = int64(val)\n")
+						sb.WriteString("\t\tcase int32:\n\t\t\tparamVal = int64(val)\n")
+					}
+					sb.WriteString("\t\t}\n")
+				} else {
+					sb.WriteString(fmt.Sprintf("\t\tparamVal = %s(i.%s)\n", param.Type, matchField.Name))
+				}
+				if rq.Arg.HasSqlcSlices() {
+					sliceType := strings.TrimPrefix(param.Type, "[]")
+					sb.WriteString(fmt.Sprintf("\t\trelVal, err := q.%s(ctx, []%s{paramVal})\n", relName, sliceType))
+				} else {
+					sb.WriteString(fmt.Sprintf("\t\trelVal, err := q.%s(ctx, paramVal)\n", relName))
+				}
+			} else {
+				if rq.Arg.HasSqlcSlices() {
+					sliceType := strings.TrimPrefix(param.Type, "[]")
+					sb.WriteString(fmt.Sprintf("\t\trelVal, err := q.%s(ctx, []%s{i.%s})\n", relName, sliceType, matchField.Name))
+				} else {
+					sb.WriteString(fmt.Sprintf("\t\trelVal, err := q.%s(ctx, i.%s)\n", relName, matchField.Name))
+				}
+			}
+			sb.WriteString("\t\tif err != nil {\n\t\t\treturn i, err\n\t\t}\n")
+			sb.WriteString(fmt.Sprintf("\t\ti.%s = relVal\n", f.Name))
+			sb.WriteString("\t}\n")
+		} else if q.Cmd == ":many" {
+			if rq.Arg.HasSqlcSlices() {
+				// Batch loading! No N+1 queries!
+				sb.WriteString(fmt.Sprintf("\t// Batch load relation %s to avoid N+1 queries\n", f.Name))
+				sb.WriteString("\t{\n")
+				sliceType := strings.TrimPrefix(param.Type, "[]")
+				sb.WriteString(fmt.Sprintf("\t\trelIDs := make([]%s, 0, len(items))\n", sliceType))
+				sb.WriteString("\t\tfor _, item := range items {\n")
+				if matchField.Type == "interface{}" {
+					sb.WriteString(fmt.Sprintf("\t\t\tswitch val := item.%s.(type) {\n", matchField.Name))
+					sb.WriteString(fmt.Sprintf("\t\t\tcase %s:\n", sliceType))
+					sb.WriteString("\t\t\t\trelIDs = append(relIDs, val)\n")
+					if sliceType == "int64" {
+						sb.WriteString("\t\t\tcase int:\n\t\t\t\trelIDs = append(relIDs, int64(val))\n")
+						sb.WriteString("\t\t\tcase int32:\n\t\t\t\trelIDs = append(relIDs, int64(val))\n")
+					}
+					sb.WriteString("\t\t\t}\n")
+				} else {
+					sb.WriteString(fmt.Sprintf("\t\t\trelIDs = append(relIDs, %s(item.%s))\n", sliceType, matchField.Name))
+				}
+				sb.WriteString("\t\t}\n")
+				sb.WriteString(fmt.Sprintf("\t\trelRows, err := q.%s(ctx, relIDs)\n", relName))
+				sb.WriteString("\t\tif err != nil {\n\t\t\treturn nil, err\n\t\t}\n")
+				relMatchField, ok := FindMatchingField(rq.Ret.Struct.Fields, matchField.Name)
+				if !ok {
+					relMatchField = rq.Ret.Struct.Fields[0]
+				}
+				relRetType := rq.Ret.Type()
+				if strings.HasPrefix(relRetType, "[]") {
+					relRetType = strings.TrimPrefix(relRetType, "[]")
+				}
+				sb.WriteString(fmt.Sprintf("\t\trelMap := make(map[%s][]%s)\n", sliceType, relRetType))
+				sb.WriteString("\t\tfor _, rRow := range relRows {\n")
+				if relMatchField.Type == "interface{}" {
+					sb.WriteString(fmt.Sprintf("\t\t\tswitch val := rRow.%s.(type) {\n", relMatchField.Name))
+					sb.WriteString(fmt.Sprintf("\t\t\tcase %s:\n", sliceType))
+					sb.WriteString("\t\t\t\trelMap[val] = append(relMap[val], rRow)\n")
+					if sliceType == "int64" {
+						sb.WriteString("\t\t\tcase int:\n\t\t\t\trelMap[int64(val)] = append(relMap[int64(val)], rRow)\n")
+						sb.WriteString("\t\t\tcase int32:\n\t\t\t\trelMap[int64(val)] = append(relMap[int64(val)], rRow)\n")
+					}
+					sb.WriteString("\t\t\t}\n")
+				} else {
+					sb.WriteString(fmt.Sprintf("\t\t\tkey := %s(rRow.%s)\n", sliceType, relMatchField.Name))
+					sb.WriteString("\t\t\trelMap[key] = append(relMap[key], rRow)\n")
+				}
+				sb.WriteString("\t\t}\n")
+				sb.WriteString("\t\tfor idx := range items {\n")
+				if matchField.Type == "interface{}" {
+					sb.WriteString(fmt.Sprintf("\t\t\tswitch val := items[idx].%s.(type) {\n", matchField.Name))
+					sb.WriteString(fmt.Sprintf("\t\t\tcase %s:\n", sliceType))
+					sb.WriteString(fmt.Sprintf("\t\t\t\titems[idx].%s = relMap[val]\n", f.Name))
+					if sliceType == "int64" {
+						sb.WriteString("\t\t\tcase int:\n")
+						sb.WriteString(fmt.Sprintf("\t\t\t\titems[idx].%s = relMap[int64(val)]\n", f.Name))
+						sb.WriteString("\t\t\tcase int32:\n")
+						sb.WriteString(fmt.Sprintf("\t\t\t\titems[idx].%s = relMap[int64(val)]\n", f.Name))
+					}
+					sb.WriteString("\t\t\t}\n")
+				} else {
+					sb.WriteString(fmt.Sprintf("\t\t\tkey := %s(items[idx].%s)\n", sliceType, matchField.Name))
+					sb.WriteString(fmt.Sprintf("\t\t\titems[idx].%s = relMap[key]\n", f.Name))
+				}
+				sb.WriteString("\t\t}\n")
+				sb.WriteString("\t}\n")
+			} else {
+				sb.WriteString(fmt.Sprintf("\t// Load relation %s for all items\n", f.Name))
+				sb.WriteString("\tfor idx := range items {\n")
+				if matchField.Type != param.Type {
+					sb.WriteString(fmt.Sprintf("\t\tvar paramVal %s\n", param.Type))
+					if matchField.Type == "interface{}" {
+						sb.WriteString(fmt.Sprintf("\t\tswitch val := items[idx].%s.(type) {\n", matchField.Name))
+						sb.WriteString(fmt.Sprintf("\t\tcase %s:\n", param.Type))
+						sb.WriteString("\t\t\tparamVal = val\n")
+						if param.Type == "int64" {
+							sb.WriteString("\t\tcase int:\n\t\t\tparamVal = int64(val)\n")
+							sb.WriteString("\t\tcase int32:\n\t\t\tparamVal = int64(val)\n")
+						}
+						sb.WriteString("\t\t}\n")
+					} else {
+						sb.WriteString(fmt.Sprintf("\t\tparamVal = %s(items[idx].%s)\n", param.Type, matchField.Name))
+					}
+					sb.WriteString(fmt.Sprintf("\t\trelVal, err := q.%s(ctx, paramVal)\n", relName))
+				} else {
+					sb.WriteString(fmt.Sprintf("\t\trelVal, err := q.%s(ctx, items[idx].%s)\n", relName, matchField.Name))
+				}
+				sb.WriteString("\t\tif err != nil {\n\t\t\treturn nil, err\n\t\t}\n")
+				sb.WriteString(fmt.Sprintf("\t\titems[idx].%s = relVal\n", f.Name))
+				sb.WriteString("\t}\n")
+			}
+		}
+	}
+	return sb.String()
+}
+
+func FindMatchingField(fields []Field, paramName string) (Field, bool) {
+	for _, f := range fields {
+		if strings.EqualFold(f.Name, paramName) {
+			return f, true
+		}
+	}
+	for _, f := range fields {
+		if strings.EqualFold(f.Name, "ID") || strings.EqualFold(paramName, "ID") {
+			return f, true
+		}
+	}
+	if len(fields) > 0 {
+		return fields[0], true
+	}
+	return Field{}, false
 }

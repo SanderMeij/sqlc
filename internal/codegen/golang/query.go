@@ -225,7 +225,9 @@ func (v QueryValue) Scan() string {
 				continue
 			}
 
-			if strings.HasPrefix(f.Type, "[]") && f.Type != "[]byte" && !v.SQLDriver.IsPGX() {
+			if f.IsRelation() {
+				out = append(out, "&relationPlaceholder")
+			} else if strings.HasPrefix(f.Type, "[]") && f.Type != "[]byte" && !v.SQLDriver.IsPGX() {
 				out = append(out, "pq.Array(&"+v.Name+"."+f.Name+")")
 			} else {
 				out = append(out, "&"+v.Name+"."+f.Name)
@@ -305,4 +307,16 @@ func (q Query) TableIdentifierForMySQL() string {
 		}
 	}
 	return strings.Join(escapedNames, ".")
+}
+
+func (q Query) HasRelations() bool {
+	if q.Ret.Struct == nil {
+		return false
+	}
+	for _, f := range q.Ret.Struct.Fields {
+		if f.IsRelation() {
+			return true
+		}
+	}
+	return false
 }

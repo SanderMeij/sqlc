@@ -7,6 +7,7 @@ package querytest
 
 import (
 	"context"
+	"strings"
 
 	"github.com/lib/pq"
 )
@@ -29,6 +30,7 @@ type GetBookRow struct {
 func (q *Queries) GetBook(ctx context.Context, bookID interface{}) (GetBookRow, error) {
 	row := q.db.QueryRowContext(ctx, getBook, bookID)
 	var i GetBookRow
+	var relationPlaceholder interface{}
 	err := row.Scan(
 		&i.BookID,
 		&i.Isbn,
@@ -37,8 +39,27 @@ func (q *Queries) GetBook(ctx context.Context, bookID interface{}) (GetBookRow, 
 		&i.Year,
 		&i.Available,
 		&i.Tags,
-		pq.Array(&i.GetBookAuthors),
+		&relationPlaceholder,
 	)
+	if err == nil {
+		// Load relation GetBookAuthors
+		{
+			var paramVal int64
+			switch val := i.BookID.(type) {
+			case int64:
+				paramVal = val
+			case int:
+				paramVal = int64(val)
+			case int32:
+				paramVal = int64(val)
+			}
+			relVal, err := q.GetBookAuthors(ctx, paramVal)
+			if err != nil {
+				return i, err
+			}
+			i.GetBookAuthors = relVal
+		}
+	}
 	return i, err
 }
 
@@ -55,6 +76,7 @@ func (q *Queries) GetBookAuthors(ctx context.Context, bookID int64) ([]Author, e
 	}
 	defer rows.Close()
 	var items []Author
+
 	for rows.Next() {
 		var i Author
 		if err := rows.Scan(
@@ -63,6 +85,134 @@ func (q *Queries) GetBookAuthors(ctx context.Context, bookID int64) ([]Author, e
 			&i.LastName,
 			&i.BirthDate,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getBooks = `-- name: GetBooks :many
+SELECT books.book_id, books.isbn, books.book_type, books.title, books.year, books.available, books.tags, NULL from books LIMIT 10
+`
+
+type GetBooksRow struct {
+	BookID          interface{}
+	Isbn            string
+	BookType        interface{}
+	Title           string
+	Year            int64
+	Available       interface{}
+	Tags            string
+	GetBooksAuthors []GetBooksAuthorsRow
+}
+
+func (q *Queries) GetBooks(ctx context.Context) ([]GetBooksRow, error) {
+	rows, err := q.db.QueryContext(ctx, getBooks)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetBooksRow
+
+	var relationPlaceholder interface{}
+	for rows.Next() {
+		var i GetBooksRow
+		if err := rows.Scan(
+			&i.BookID,
+			&i.Isbn,
+			&i.BookType,
+			&i.Title,
+			&i.Year,
+			&i.Available,
+			&i.Tags,
+			&relationPlaceholder,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	// Batch load relation GetBooksAuthors to avoid N+1 queries
+	{
+		relIDs := make([]int64, 0, len(items))
+		for _, item := range items {
+			switch val := item.BookID.(type) {
+			case int64:
+				relIDs = append(relIDs, val)
+			case int:
+				relIDs = append(relIDs, int64(val))
+			case int32:
+				relIDs = append(relIDs, int64(val))
+			}
+		}
+		relRows, err := q.GetBooksAuthors(ctx, relIDs)
+		if err != nil {
+			return nil, err
+		}
+		relMap := make(map[int64][]GetBooksAuthorsRow)
+		for _, rRow := range relRows {
+			key := int64(rRow.BookID)
+			relMap[key] = append(relMap[key], rRow)
+		}
+		for idx := range items {
+			switch val := items[idx].BookID.(type) {
+			case int64:
+				items[idx].GetBooksAuthors = relMap[val]
+			case int:
+				items[idx].GetBooksAuthors = relMap[int64(val)]
+			case int32:
+				items[idx].GetBooksAuthors = relMap[int64(val)]
+			}
+		}
+	}
+
+	return items, nil
+}
+
+const getBooksAuthors = `-- name: GetBooksAuthors :many
+SELECT book_authors.book_id, authors.first_name FROM book_authors 
+INNER JOIN authors ON book_authors.author_id = authors.id
+WHERE book_authors.book_id IN (/*SLICE:book_ids*/?)
+`
+
+type GetBooksAuthorsRow struct {
+	BookID    int64
+	FirstName string
+}
+
+func (q *Queries) GetBooksAuthors(ctx context.Context, bookIds []int64) ([]GetBooksAuthorsRow, error) {
+	query := getBooksAuthors
+	var queryParams []interface{}
+	if len(bookIds) > 0 {
+		for _, v := range bookIds {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:book_ids*/?", strings.Repeat(",?", len(bookIds))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:book_ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetBooksAuthorsRow
+
+	for rows.Next() {
+		var i GetBooksAuthorsRow
+		if err := rows.Scan(&i.BookID, &i.FirstName); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
