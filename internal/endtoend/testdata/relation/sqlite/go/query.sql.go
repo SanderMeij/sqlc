@@ -11,7 +11,13 @@ import (
 )
 
 const getBook = `-- name: GetBook :one
-SELECT books.book_id, books.isbn, books.book_type, books.title, books.year, books.available, books.tags, NULL from books WHERE book_id = ?
+SELECT
+  books.book_id, books.isbn, books.book_type, books.title, books.year, books.available, books.tags,
+  NULL
+FROM
+  books
+WHERE
+  book_id = ?
 `
 
 type GetBookRow struct {
@@ -56,9 +62,13 @@ func (q *Queries) GetBook(ctx context.Context, bookID int64) (GetBookRow, error)
 }
 
 const getBookAuthors = `-- name: GetBookAuthors :many
-SELECT authors.id, authors.first_name, authors.last_name, authors.birth_date FROM book_authors 
-INNER JOIN authors ON book_authors.author_id = authors.id
-WHERE book_authors.book_id = ?
+SELECT
+  authors.id, authors.first_name, authors.last_name, authors.birth_date
+FROM
+  book_authors
+  INNER JOIN authors ON book_authors.author_id = authors.id
+WHERE
+  book_authors.book_id = ?
 `
 
 func (q *Queries) GetBookAuthors(ctx context.Context, bookID int64) ([]Author, error) {
@@ -91,7 +101,13 @@ func (q *Queries) GetBookAuthors(ctx context.Context, bookID int64) ([]Author, e
 }
 
 const getBooks = `-- name: GetBooks :many
-SELECT books.book_id, books.isbn, books.book_type, books.title, books.year, books.available, books.tags, NULL from books LIMIT 10
+SELECT
+  books.book_id, books.isbn, books.book_type, books.title, books.year, books.available, books.tags,
+  NULL
+FROM
+  books
+LIMIT
+  10
 `
 
 type GetBooksRow struct {
@@ -147,11 +163,11 @@ func (q *Queries) GetBooks(ctx context.Context) ([]GetBooksRow, error) {
 		}
 		relMap := make(map[int64]map[int64]GetBooksAuthorsRow)
 		for _, rRow := range relRows {
-			key := int64(rRow.BookID)
+			key := int64(rRow.TargetKey)
 			if relMap[key] == nil {
 				relMap[key] = make(map[int64]GetBooksAuthorsRow)
 			}
-			relMap[key][rRow.ID] = rRow
+			relMap[key][rRow.SourceKey] = rRow
 		}
 		for idx := range items {
 			key := int64(items[idx].BookID)
@@ -163,20 +179,23 @@ func (q *Queries) GetBooks(ctx context.Context) ([]GetBooksRow, error) {
 }
 
 const getBooksAuthors = `-- name: GetBooksAuthors :many
-SELECT authors.id, authors.first_name, authors.last_name, book_authors.book_id FROM book_authors 
-INNER JOIN authors ON book_authors.author_id = authors.id
-WHERE book_authors.book_id IN (/*SLICE:book_ids*/?)
+SELECT
+  authors.id AS source_key,
+  authors.first_name,
+  authors.last_name,
+  book_authors.book_id as target_key
+FROM
+  book_authors
+  INNER JOIN authors ON book_authors.author_id = authors.id
+WHERE
+  book_authors.book_id IN (/*SLICE:book_ids*/?)
 `
 
 type GetBooksAuthorsRow struct {
-	ID        int64
+	SourceKey int64
 	FirstName string
 	LastName  string
-	BookID    int64
-}
-
-func (s GetBooksAuthorsRow) GetID() int64 {
-	return s.ID
+	TargetKey int64
 }
 
 func (q *Queries) GetBooksAuthors(ctx context.Context, bookIds []int64) ([]GetBooksAuthorsRow, error) {
@@ -200,10 +219,10 @@ func (q *Queries) GetBooksAuthors(ctx context.Context, bookIds []int64) ([]GetBo
 	for rows.Next() {
 		var i GetBooksAuthorsRow
 		if err := rows.Scan(
-			&i.ID,
+			&i.SourceKey,
 			&i.FirstName,
 			&i.LastName,
-			&i.BookID,
+			&i.TargetKey,
 		); err != nil {
 			return nil, err
 		}

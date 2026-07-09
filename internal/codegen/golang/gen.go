@@ -532,7 +532,7 @@ func (t *tmplCtx) codegenLoadRelations(q Query) string {
 				var relKeyField Field
 				if rq.Ret.Struct != nil {
 					for _, f_ := range rq.Ret.Struct.Fields {
-						if strings.EqualFold(f_.Name, "id") {
+						if strings.EqualFold(f_.Name, "id") || strings.EqualFold(f_.Name, "source_key") || strings.EqualFold(f_.Name, "SourceKey") {
 							relKeyField = f_
 							break
 						}
@@ -576,14 +576,34 @@ func (t *tmplCtx) codegenLoadRelations(q Query) string {
 				sb.WriteString("\t\t}\n")
 				sb.WriteString(fmt.Sprintf("\t\trelRows, err := q.%s(ctx, relIDs)\n", relName))
 				sb.WriteString("\t\tif err != nil {\n\t\t\treturn nil, err\n\t\t}\n")
-				relMatchField, ok := FindMatchingField(rq.Ret.Struct.Fields, matchField.Name)
+				var relMatchField Field
+				var ok bool
+				// Try exact match first
+				for _, f_ := range rq.Ret.Struct.Fields {
+					if strings.EqualFold(f_.Name, matchField.Name) {
+						relMatchField = f_
+						ok = true
+						break
+					}
+				}
+				// Try target_key / TargetKey
 				if !ok {
-					relMatchField = rq.Ret.Struct.Fields[0]
+					for _, f_ := range rq.Ret.Struct.Fields {
+						if strings.EqualFold(f_.Name, "target_key") || strings.EqualFold(f_.Name, "TargetKey") {
+							relMatchField = f_
+							ok = true
+							break
+						}
+					}
+				}
+				// Try ID / fallback
+				if !ok {
+					relMatchField, ok = FindMatchingField(rq.Ret.Struct.Fields, matchField.Name)
 				}
 				var relKeyField Field
 				if rq.Ret.Struct != nil {
 					for _, f_ := range rq.Ret.Struct.Fields {
-						if strings.EqualFold(f_.Name, "id") {
+						if strings.EqualFold(f_.Name, "id") || strings.EqualFold(f_.Name, "source_key") || strings.EqualFold(f_.Name, "SourceKey") {
 							relKeyField = f_
 							break
 						}
@@ -661,7 +681,7 @@ func (t *tmplCtx) codegenLoadRelations(q Query) string {
 					var relKeyField Field
 					if rq.Ret.Struct != nil {
 						for _, f_ := range rq.Ret.Struct.Fields {
-							if strings.EqualFold(f_.Name, "id") {
+							if strings.EqualFold(f_.Name, "id") || strings.EqualFold(f_.Name, "source_key") || strings.EqualFold(f_.Name, "SourceKey") {
 								relKeyField = f_
 								break
 							}

@@ -114,7 +114,7 @@ func goRelationType(req *plugin.GenerateRequest, options *opts.Options, col *plu
 	if relQuery.Cmd == ":many" {
 		var idCol *plugin.Column
 		for _, c := range relQuery.Columns {
-			if strings.ToLower(c.Name) == "id" {
+			if strings.ToLower(c.Name) == "id" || strings.ToLower(c.Name) == "source_key" {
 				idCol = c
 				break
 			}
