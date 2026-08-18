@@ -9,11 +9,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sqlc-dev/sqlc/internal/compiler"
-	"github.com/sqlc-dev/sqlc/internal/config"
-	"github.com/sqlc-dev/sqlc/internal/multierr"
-	"github.com/sqlc-dev/sqlc/internal/opts"
-	"github.com/sqlc-dev/sqlc/internal/sql/ast"
+	"github.com/SanderMeij/sqlc/internal/compiler"
+	"github.com/SanderMeij/sqlc/internal/config"
+	"github.com/SanderMeij/sqlc/internal/multierr"
+	"github.com/SanderMeij/sqlc/internal/opts"
+	"github.com/SanderMeij/sqlc/internal/sql/ast"
 )
 
 func newAnalyzeCmd() *cobra.Command {

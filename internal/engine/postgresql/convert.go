@@ -5,7 +5,7 @@ import (
 
 	pg "github.com/pganalyze/pg_query_go/v6"
 
-	"github.com/sqlc-dev/sqlc/internal/sql/ast"
+	"github.com/SanderMeij/sqlc/internal/sql/ast"
 )
 
 func convertFuncParamMode(m pg.FunctionParameterMode) (ast.FuncParamMode, error) {

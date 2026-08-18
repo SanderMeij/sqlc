@@ -8,10 +8,10 @@ import (
 
 	nodes "github.com/pganalyze/pg_query_go/v6"
 
-	"github.com/sqlc-dev/sqlc/internal/engine/postgresql/parser"
-	"github.com/sqlc-dev/sqlc/internal/source"
-	"github.com/sqlc-dev/sqlc/internal/sql/ast"
-	"github.com/sqlc-dev/sqlc/internal/sql/sqlerr"
+	"github.com/SanderMeij/sqlc/internal/engine/postgresql/parser"
+	"github.com/SanderMeij/sqlc/internal/source"
+	"github.com/SanderMeij/sqlc/internal/sql/ast"
+	"github.com/SanderMeij/sqlc/internal/sql/sqlerr"
 )
 
 func stringSlice(list *nodes.List) []string {

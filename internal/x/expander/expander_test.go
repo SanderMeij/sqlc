@@ -10,11 +10,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ncruces/go-sqlite3"
 
-	"github.com/sqlc-dev/sqlc/internal/engine/dolphin"
-	"github.com/sqlc-dev/sqlc/internal/engine/postgresql"
-	"github.com/sqlc-dev/sqlc/internal/engine/sqlite"
-	"github.com/sqlc-dev/sqlc/internal/sqltest/docker"
-	"github.com/sqlc-dev/sqlc/internal/sqltest/native"
+	"github.com/SanderMeij/sqlc/internal/engine/dolphin"
+	"github.com/SanderMeij/sqlc/internal/engine/postgresql"
+	"github.com/SanderMeij/sqlc/internal/engine/sqlite"
+	"github.com/SanderMeij/sqlc/internal/sqltest/docker"
+	"github.com/SanderMeij/sqlc/internal/sqltest/native"
 )
 
 // PostgreSQLColumnGetter implements ColumnGetter for PostgreSQL using pgxpool.
@@ -49,8 +49,8 @@ func (g *PostgreSQLColumnGetter) GetColumnNames(ctx context.Context, query strin
 // An earlier implementation pulled column metadata straight out of a prepared
 // statement via a forked mysql driver exposing StmtMetadata. That fork
 // required a `replace` directive in go.mod, which broke `go install
-// github.com/sqlc-dev/sqlc/cmd/sqlc@latest` (see
-// https://github.com/sqlc-dev/sqlc/issues/4397). Reading columns from sql.Rows
+// github.com/SanderMeij/sqlc/cmd/sqlc@latest` (see
+// https://github.com/SanderMeij/sqlc/issues/4397). Reading columns from sql.Rows
 // works with the upstream driver and keeps the test covering the same
 // behavior.
 type MySQLColumnGetter struct {

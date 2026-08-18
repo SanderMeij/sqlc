@@ -7,8 +7,8 @@ import (
 
 	"github.com/sqlc-dev/zetajones/parser"
 
-	"github.com/sqlc-dev/sqlc/internal/source"
-	"github.com/sqlc-dev/sqlc/internal/sql/ast"
+	"github.com/SanderMeij/sqlc/internal/source"
+	"github.com/SanderMeij/sqlc/internal/sql/ast"
 )
 
 func NewParser() *Parser {

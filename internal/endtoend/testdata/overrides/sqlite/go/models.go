@@ -5,7 +5,7 @@
 package override
 
 import (
-	"github.com/sqlc-dev/sqlc-testdata/pkg"
+	"github.com/SanderMeij/sqlc-testdata/pkg"
 )
 
 type Foo struct {

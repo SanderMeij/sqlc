@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sqlc-dev/sqlc/internal/source"
-	"github.com/sqlc-dev/sqlc/internal/sql/ast"
-	"github.com/sqlc-dev/sqlc/internal/sql/astutils"
+	"github.com/SanderMeij/sqlc/internal/source"
+	"github.com/SanderMeij/sqlc/internal/sql/ast"
+	"github.com/SanderMeij/sqlc/internal/sql/astutils"
 )
 
 // Relation is an instance of `sqlc.relation(query)`

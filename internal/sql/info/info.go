@@ -1,7 +1,7 @@
 package info
 
 import (
-	"github.com/sqlc-dev/sqlc/internal/sql/catalog"
+	"github.com/SanderMeij/sqlc/internal/sql/catalog"
 )
 
 // Provide a read-only view into the catalog

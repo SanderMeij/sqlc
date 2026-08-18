@@ -7,7 +7,7 @@ package db
 import (
 	"context"
 
-	models "github.com/sqlc-dev/sqlc/endtoend/output_models_path/postgresql/model"
+	models "github.com/SanderMeij/sqlc/endtoend/output_models_path/postgresql/model"
 )
 
 type Querier interface {

@@ -1,6 +1,6 @@
 package ast
 
-import "github.com/sqlc-dev/sqlc/internal/sql/format"
+import "github.com/SanderMeij/sqlc/internal/sql/format"
 
 const (
 	AT_AddColumn AlterTableType = iota

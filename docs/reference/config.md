@@ -73,7 +73,7 @@ version: '2'
 plugins:
 - name: py
   wasm:
-    url: https://github.com/sqlc-dev/sqlc-gen-python/releases/download/v0.16.0-alpha/sqlc-gen-python.wasm
+    url: https://github.com/SanderMeij/sqlc-gen-python/releases/download/v0.16.0-alpha/sqlc-gen-python.wasm
     sha256: 428476c7408fd4c032da4ec74e8a7344f4fa75e0f98a5a3302f238283b9b95f2
 sql:
 - schema: "schema.sql"
@@ -204,7 +204,7 @@ See [Overriding types](../howto/overrides.md) for an in-depth guide to using typ
 
 #### kotlin
 
-> Removed in v1.17.0 and replaced by the [sqlc-gen-kotlin](https://github.com/sqlc-dev/sqlc-gen-kotlin) plugin. Follow the [migration guide](../guides/migrating-to-sqlc-gen-kotlin) to switch.
+> Removed in v1.17.0 and replaced by the [sqlc-gen-kotlin](https://github.com/SanderMeij/sqlc-gen-kotlin) plugin. Follow the [migration guide](../guides/migrating-to-sqlc-gen-kotlin) to switch.
 
 - `package`:
   - The package name to use for the generated code.
@@ -215,7 +215,7 @@ See [Overriding types](../howto/overrides.md) for an in-depth guide to using typ
 
 #### python
 
-> Removed in v1.17.0 and replaced by the [sqlc-gen-python](https://github.com/sqlc-dev/sqlc-gen-python) plugin. Follow the [migration guide](../guides/migrating-to-sqlc-gen-python) to switch.
+> Removed in v1.17.0 and replaced by the [sqlc-gen-python](https://github.com/SanderMeij/sqlc-gen-python) plugin. Follow the [migration guide](../guides/migrating-to-sqlc-gen-python) to switch.
 
 - `package`:
   - The package name to use for the generated code.
@@ -263,7 +263,7 @@ version: "2"
 plugins:
 - name: "py"
   wasm: 
-    url: "https://github.com/sqlc-dev/sqlc-gen-python/releases/download/v0.16.0-alpha/sqlc-gen-python.wasm"
+    url: "https://github.com/SanderMeij/sqlc-gen-python/releases/download/v0.16.0-alpha/sqlc-gen-python.wasm"
     sha256: "428476c7408fd4c032da4ec74e8a7344f4fa75e0f98a5a3302f238283b9b95f2"
 - name: "js"
   env:

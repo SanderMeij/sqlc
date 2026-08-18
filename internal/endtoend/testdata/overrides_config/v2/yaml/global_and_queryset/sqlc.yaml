@@ -5,10 +5,10 @@ overrides:
       one: "ONE"
     overrides:
       - db_type: "text"
-        go_type: "github.com/sqlc-dev/sqlc-testdata/pkg.CustomType"
+        go_type: "github.com/SanderMeij/sqlc-testdata/pkg.CustomType"
       - column: "overrides.three"
         go_type:
-          import: "github.com/sqlc-dev/sqlc-testdata/pkg"
+          import: "github.com/SanderMeij/sqlc-testdata/pkg"
           type: "CustomType"
 sql:
 - schema: "../../../schema.sql"

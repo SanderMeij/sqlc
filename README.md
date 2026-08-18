@@ -1,7 +1,7 @@
 # sqlc: A SQL Compiler
 
-![go](https://github.com/sqlc-dev/sqlc/workflows/go/badge.svg)
-[![Go Report Card](https://goreportcard.com/badge/github.com/sqlc-dev/sqlc)](https://goreportcard.com/report/github.com/sqlc-dev/sqlc)
+![go](https://github.com/SanderMeij/sqlc/workflows/go/badge.svg)
+[![Go Report Card](https://goreportcard.com/badge/github.com/SanderMeij/sqlc)](https://goreportcard.com/report/github.com/SanderMeij/sqlc)
 
 sqlc generates **type-safe code** from SQL. Here's how it works:
 
@@ -22,10 +22,10 @@ Check out [an interactive example](https://play.sqlc.dev/) to see it in action, 
 
 ## Supported languages
 
-- [sqlc-gen-go](https://github.com/sqlc-dev/sqlc-gen-go)
-- [sqlc-gen-kotlin](https://github.com/sqlc-dev/sqlc-gen-kotlin)
-- [sqlc-gen-python](https://github.com/sqlc-dev/sqlc-gen-python)
-- [sqlc-gen-typescript](https://github.com/sqlc-dev/sqlc-gen-typescript)
+- [sqlc-gen-go](https://github.com/SanderMeij/sqlc-gen-go)
+- [sqlc-gen-kotlin](https://github.com/SanderMeij/sqlc-gen-kotlin)
+- [sqlc-gen-python](https://github.com/SanderMeij/sqlc-gen-python)
+- [sqlc-gen-typescript](https://github.com/SanderMeij/sqlc-gen-typescript)
 
 Additional languages can be added via [plugins](https://docs.sqlc.dev/en/latest/reference/language-support.html#community-language-support).
 

@@ -14,19 +14,19 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/sqlc-dev/sqlc/internal/codegen/golang"
-	genjson "github.com/sqlc-dev/sqlc/internal/codegen/json"
-	"github.com/sqlc-dev/sqlc/internal/compiler"
-	"github.com/sqlc-dev/sqlc/internal/config"
-	"github.com/sqlc-dev/sqlc/internal/config/convert"
-	"github.com/sqlc-dev/sqlc/internal/debug"
-	"github.com/sqlc-dev/sqlc/internal/ext"
-	"github.com/sqlc-dev/sqlc/internal/ext/process"
-	"github.com/sqlc-dev/sqlc/internal/ext/wasm"
-	"github.com/sqlc-dev/sqlc/internal/multierr"
-	"github.com/sqlc-dev/sqlc/internal/opts"
-	"github.com/sqlc-dev/sqlc/internal/plugin"
-	"github.com/sqlc-dev/sqlc/internal/sqlcdebug"
+	"github.com/SanderMeij/sqlc/internal/codegen/golang"
+	genjson "github.com/SanderMeij/sqlc/internal/codegen/json"
+	"github.com/SanderMeij/sqlc/internal/compiler"
+	"github.com/SanderMeij/sqlc/internal/config"
+	"github.com/SanderMeij/sqlc/internal/config/convert"
+	"github.com/SanderMeij/sqlc/internal/debug"
+	"github.com/SanderMeij/sqlc/internal/ext"
+	"github.com/SanderMeij/sqlc/internal/ext/process"
+	"github.com/SanderMeij/sqlc/internal/ext/wasm"
+	"github.com/SanderMeij/sqlc/internal/multierr"
+	"github.com/SanderMeij/sqlc/internal/opts"
+	"github.com/SanderMeij/sqlc/internal/plugin"
+	"github.com/SanderMeij/sqlc/internal/sqlcdebug"
 )
 
 var debugDumpCatalog = sqlcdebug.New("dumpcatalog")

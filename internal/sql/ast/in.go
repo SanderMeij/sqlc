@@ -1,6 +1,6 @@
 package ast
 
-import "github.com/sqlc-dev/sqlc/internal/sql/format"
+import "github.com/SanderMeij/sqlc/internal/sql/format"
 
 // In describes a 'select foo in (bar, baz)' type statement, though there are multiple important variants handled.
 type In struct {

@@ -1,6 +1,6 @@
 package ast
 
-import "github.com/sqlc-dev/sqlc/internal/sql/format"
+import "github.com/SanderMeij/sqlc/internal/sql/format"
 
 // OnDuplicateKeyUpdate represents MySQL's ON DUPLICATE KEY UPDATE clause
 type OnDuplicateKeyUpdate struct {

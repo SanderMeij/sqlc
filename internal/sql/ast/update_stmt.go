@@ -3,7 +3,7 @@ package ast
 import (
 	"strings"
 
-	"github.com/sqlc-dev/sqlc/internal/sql/format"
+	"github.com/SanderMeij/sqlc/internal/sql/format"
 )
 
 type UpdateStmt struct {

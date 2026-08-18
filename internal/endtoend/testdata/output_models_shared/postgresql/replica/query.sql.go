@@ -8,7 +8,7 @@ package replica
 import (
 	"context"
 
-	models "github.com/sqlc-dev/sqlc/endtoend/output_models_shared/postgresql/model"
+	models "github.com/SanderMeij/sqlc/endtoend/output_models_shared/postgresql/model"
 )
 
 const listAuthors = `-- name: ListAuthors :many

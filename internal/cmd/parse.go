@@ -9,14 +9,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sqlc-dev/sqlc/internal/engine/clickhouse"
-	"github.com/sqlc-dev/sqlc/internal/engine/dolphin"
-	"github.com/sqlc-dev/sqlc/internal/engine/googlesql"
-	"github.com/sqlc-dev/sqlc/internal/engine/postgresql"
-	"github.com/sqlc-dev/sqlc/internal/engine/sqlite"
-	"github.com/sqlc-dev/sqlc/internal/metadata"
-	"github.com/sqlc-dev/sqlc/internal/source"
-	"github.com/sqlc-dev/sqlc/internal/sql/ast"
+	"github.com/SanderMeij/sqlc/internal/engine/clickhouse"
+	"github.com/SanderMeij/sqlc/internal/engine/dolphin"
+	"github.com/SanderMeij/sqlc/internal/engine/googlesql"
+	"github.com/SanderMeij/sqlc/internal/engine/postgresql"
+	"github.com/SanderMeij/sqlc/internal/engine/sqlite"
+	"github.com/SanderMeij/sqlc/internal/metadata"
+	"github.com/SanderMeij/sqlc/internal/source"
+	"github.com/SanderMeij/sqlc/internal/sql/ast"
 )
 
 // dialectParser is the subset of the engine parsers that the parse command

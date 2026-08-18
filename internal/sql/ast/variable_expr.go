@@ -1,6 +1,6 @@
 package ast
 
-import "github.com/sqlc-dev/sqlc/internal/sql/format"
+import "github.com/SanderMeij/sqlc/internal/sql/format"
 
 // VariableExpr represents a MySQL user variable (e.g., @user_id)
 // This is distinct from sqlc's @param named parameter syntax.

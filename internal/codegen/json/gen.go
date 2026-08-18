@@ -8,7 +8,7 @@ import (
 
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"github.com/sqlc-dev/sqlc/internal/plugin"
+	"github.com/SanderMeij/sqlc/internal/plugin"
 )
 
 func parseOptions(req *plugin.GenerateRequest) (*opts, error) {

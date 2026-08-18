@@ -8,14 +8,14 @@ import (
 
 	"github.com/ncruces/go-sqlite3"
 
-	core "github.com/sqlc-dev/sqlc/internal/analysis"
-	"github.com/sqlc-dev/sqlc/internal/config"
-	"github.com/sqlc-dev/sqlc/internal/shfmt"
-	"github.com/sqlc-dev/sqlc/internal/sql/ast"
-	"github.com/sqlc-dev/sqlc/internal/sql/catalog"
-	"github.com/sqlc-dev/sqlc/internal/sql/named"
-	"github.com/sqlc-dev/sqlc/internal/sql/sqlerr"
-	"github.com/sqlc-dev/sqlc/internal/sqlcdebug"
+	core "github.com/SanderMeij/sqlc/internal/analysis"
+	"github.com/SanderMeij/sqlc/internal/config"
+	"github.com/SanderMeij/sqlc/internal/shfmt"
+	"github.com/SanderMeij/sqlc/internal/sql/ast"
+	"github.com/SanderMeij/sqlc/internal/sql/catalog"
+	"github.com/SanderMeij/sqlc/internal/sql/named"
+	"github.com/SanderMeij/sqlc/internal/sql/sqlerr"
+	"github.com/SanderMeij/sqlc/internal/sqlcdebug"
 )
 
 var debugDatabases = sqlcdebug.New("databases")

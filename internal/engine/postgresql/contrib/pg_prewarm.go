@@ -3,8 +3,8 @@
 package contrib
 
 import (
-	"github.com/sqlc-dev/sqlc/internal/sql/ast"
-	"github.com/sqlc-dev/sqlc/internal/sql/catalog"
+	"github.com/SanderMeij/sqlc/internal/sql/ast"
+	"github.com/SanderMeij/sqlc/internal/sql/catalog"
 )
 
 var funcsPgPrewarm = []*catalog.Function{
