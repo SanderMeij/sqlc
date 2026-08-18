@@ -1,7 +1,6 @@
 package golang
 
 import (
-	"fmt"
 	"maps"
 	"strings"
 
@@ -112,18 +111,7 @@ func goRelationType(req *plugin.GenerateRequest, options *opts.Options, col *plu
 
 	typ := relationType(req, options, relQuery)
 	if relQuery.Cmd == ":many" {
-		var idCol *plugin.Column
-		for _, c := range relQuery.Columns {
-			if strings.ToLower(c.Name) == "id" || strings.ToLower(c.Name) == "source_key" {
-				idCol = c
-				break
-			}
-		}
-		keyType := "interface{}"
-		if idCol != nil {
-			keyType = goType(req, options, idCol)
-		}
-		return fmt.Sprintf("map[%s]%s", keyType, typ)
+		return "[]" + typ
 	}
 	return typ
 }

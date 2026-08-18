@@ -28,7 +28,7 @@ type GetBookRow struct {
 	Year           int64
 	Available      interface{}
 	Tags           string
-	GetBookAuthors map[int64]Author
+	GetBookAuthors []Author
 }
 
 func (q *Queries) GetBook(ctx context.Context, bookID int64) (GetBookRow, error) {
@@ -51,11 +51,7 @@ func (q *Queries) GetBook(ctx context.Context, bookID int64) (GetBookRow, error)
 			if err != nil {
 				return i, err
 			}
-			relMap := make(map[int64]Author)
-			for _, rRow := range relVal {
-				relMap[rRow.ID] = rRow
-			}
-			i.GetBookAuthors = relMap
+			i.GetBookAuthors = relVal
 		}
 	}
 	return i, err
@@ -118,7 +114,7 @@ type GetBooksRow struct {
 	Year            int64
 	Available       interface{}
 	Tags            string
-	GetBooksAuthors map[int64]GetBooksAuthorsRow
+	GetBooksAuthors []GetBooksAuthorsRow
 }
 
 func (q *Queries) GetBooks(ctx context.Context) ([]GetBooksRow, error) {
@@ -161,13 +157,10 @@ func (q *Queries) GetBooks(ctx context.Context) ([]GetBooksRow, error) {
 		if err != nil {
 			return nil, err
 		}
-		relMap := make(map[int64]map[int64]GetBooksAuthorsRow)
+		relMap := make(map[int64][]GetBooksAuthorsRow)
 		for _, rRow := range relRows {
 			key := int64(rRow.TargetKey)
-			if relMap[key] == nil {
-				relMap[key] = make(map[int64]GetBooksAuthorsRow)
-			}
-			relMap[key][rRow.SourceKey] = rRow
+			relMap[key] = append(relMap[key], rRow)
 		}
 		for idx := range items {
 			key := int64(items[idx].BookID)

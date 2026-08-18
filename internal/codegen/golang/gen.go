@@ -528,31 +528,7 @@ func (t *tmplCtx) codegenLoadRelations(q Query) string {
 				}
 			}
 			sb.WriteString("\t\tif err != nil {\n\t\t\treturn i, err\n\t\t}\n")
-			if rq.Cmd == ":many" {
-				var relKeyField Field
-				if rq.Ret.Struct != nil {
-					for _, f_ := range rq.Ret.Struct.Fields {
-						if strings.EqualFold(f_.Name, "id") || strings.EqualFold(f_.Name, "source_key") || strings.EqualFold(f_.Name, "SourceKey") {
-							relKeyField = f_
-							break
-						}
-					}
-				}
-				if relKeyField.Name == "" {
-					relKeyField = Field{Name: "ID", Type: "interface{}"}
-				}
-				relRetType := rq.Ret.Type()
-				if strings.HasPrefix(relRetType, "[]") {
-					relRetType = strings.TrimPrefix(relRetType, "[]")
-				}
-				sb.WriteString(fmt.Sprintf("\t\trelMap := make(map[%s]%s)\n", relKeyField.Type, relRetType))
-				sb.WriteString("\t\tfor _, rRow := range relVal {\n")
-				sb.WriteString(fmt.Sprintf("\t\t\trelMap[rRow.%s] = rRow\n", relKeyField.Name))
-				sb.WriteString("\t\t}\n")
-				sb.WriteString(fmt.Sprintf("\t\ti.%s = relMap\n", f.Name))
-			} else {
-				sb.WriteString(fmt.Sprintf("\t\ti.%s = relVal\n", f.Name))
-			}
+			sb.WriteString(fmt.Sprintf("\t\ti.%s = relVal\n", f.Name))
 			sb.WriteString("\t}\n")
 		} else if q.Cmd == ":many" {
 			if rq.Arg.HasSqlcSlices() {
@@ -600,42 +576,26 @@ func (t *tmplCtx) codegenLoadRelations(q Query) string {
 				if !ok {
 					relMatchField, ok = FindMatchingField(rq.Ret.Struct.Fields, matchField.Name)
 				}
-				var relKeyField Field
-				if rq.Ret.Struct != nil {
-					for _, f_ := range rq.Ret.Struct.Fields {
-						if strings.EqualFold(f_.Name, "id") || strings.EqualFold(f_.Name, "source_key") || strings.EqualFold(f_.Name, "SourceKey") {
-							relKeyField = f_
-							break
-						}
-					}
-				}
-				if relKeyField.Name == "" {
-					relKeyField = Field{Name: "ID", Type: "interface{}"}
-				}
 				relRetType := rq.Ret.Type()
 				if strings.HasPrefix(relRetType, "[]") {
 					relRetType = strings.TrimPrefix(relRetType, "[]")
 				}
-				sb.WriteString(fmt.Sprintf("\t\trelMap := make(map[%s]map[%s]%s)\n", sliceType, relKeyField.Type, relRetType))
+				sb.WriteString(fmt.Sprintf("\t\trelMap := make(map[%s][]%s)\n", sliceType, relRetType))
 				sb.WriteString("\t\tfor _, rRow := range relRows {\n")
 				if relMatchField.Type == "interface{}" {
 					sb.WriteString(fmt.Sprintf("\t\t\tswitch val := rRow.%s.(type) {\n", relMatchField.Name))
 					sb.WriteString(fmt.Sprintf("\t\t\tcase %s:\n", sliceType))
-					sb.WriteString(fmt.Sprintf("\t\t\t\tif relMap[val] == nil {\n\t\t\t\t\trelMap[val] = make(map[%s]%s)\n\t\t\t\t}\n", relKeyField.Type, relRetType))
-					sb.WriteString(fmt.Sprintf("\t\t\t\trelMap[val][rRow.%s] = rRow\n", relKeyField.Name))
+					sb.WriteString(fmt.Sprintf("\t\t\t\trelMap[val] = append(relMap[val], rRow)\n"))
 					if sliceType == "int64" {
 						sb.WriteString("\t\t\tcase int:\n")
-						sb.WriteString(fmt.Sprintf("\t\t\t\tif relMap[int64(val)] == nil {\n\t\t\t\t\trelMap[int64(val)] = make(map[%s]%s)\n\t\t\t\t}\n", relKeyField.Type, relRetType))
-						sb.WriteString(fmt.Sprintf("\t\t\t\trelMap[int64(val)][rRow.%s] = rRow\n", relKeyField.Name))
+						sb.WriteString(fmt.Sprintf("\t\t\t\trelMap[int64(val)] = append(relMap[int64(val)], rRow)\n"))
 						sb.WriteString("\t\t\tcase int32:\n")
-						sb.WriteString(fmt.Sprintf("\t\t\t\tif relMap[int64(val)] == nil {\n\t\t\t\t\trelMap[int64(val)] = make(map[%s]%s)\n\t\t\t\t}\n", relKeyField.Type, relRetType))
-						sb.WriteString(fmt.Sprintf("\t\t\t\trelMap[int64(val)][rRow.%s] = rRow\n", relKeyField.Name))
+						sb.WriteString(fmt.Sprintf("\t\t\t\trelMap[int64(val)] = append(relMap[int64(val)], rRow)\n"))
 					}
 					sb.WriteString("\t\t\t}\n")
 				} else {
 					sb.WriteString(fmt.Sprintf("\t\t\tkey := %s(rRow.%s)\n", sliceType, relMatchField.Name))
-					sb.WriteString(fmt.Sprintf("\t\t\tif relMap[key] == nil {\n\t\t\t\trelMap[key] = make(map[%s]%s)\n\t\t\t}\n", relKeyField.Type, relRetType))
-					sb.WriteString(fmt.Sprintf("\t\t\trelMap[key][rRow.%s] = rRow\n", relKeyField.Name))
+					sb.WriteString("\t\t\trelMap[key] = append(relMap[key], rRow)\n")
 				}
 				sb.WriteString("\t\t}\n")
 				sb.WriteString("\t\tfor idx := range items {\n")
@@ -677,31 +637,7 @@ func (t *tmplCtx) codegenLoadRelations(q Query) string {
 					sb.WriteString(fmt.Sprintf("\t\trelVal, err := q.%s(ctx, items[idx].%s)\n", relName, matchField.Name))
 				}
 				sb.WriteString("\t\tif err != nil {\n\t\t\treturn nil, err\n\t\t}\n")
-				if rq.Cmd == ":many" {
-					var relKeyField Field
-					if rq.Ret.Struct != nil {
-						for _, f_ := range rq.Ret.Struct.Fields {
-							if strings.EqualFold(f_.Name, "id") || strings.EqualFold(f_.Name, "source_key") || strings.EqualFold(f_.Name, "SourceKey") {
-								relKeyField = f_
-								break
-							}
-						}
-					}
-					if relKeyField.Name == "" {
-						relKeyField = Field{Name: "ID", Type: "interface{}"}
-					}
-					relRetType := rq.Ret.Type()
-					if strings.HasPrefix(relRetType, "[]") {
-						relRetType = strings.TrimPrefix(relRetType, "[]")
-					}
-					sb.WriteString(fmt.Sprintf("\t\trelMap := make(map[%s]%s)\n", relKeyField.Type, relRetType))
-					sb.WriteString("\t\tfor _, rRow := range relVal {\n")
-					sb.WriteString(fmt.Sprintf("\t\t\trelMap[rRow.%s] = rRow\n", relKeyField.Name))
-					sb.WriteString("\t\t}\n")
-					sb.WriteString(fmt.Sprintf("\t\titems[idx].%s = relMap\n", f.Name))
-				} else {
-					sb.WriteString(fmt.Sprintf("\t\titems[idx].%s = relVal\n", f.Name))
-				}
+				sb.WriteString(fmt.Sprintf("\t\titems[idx].%s = relVal\n", f.Name))
 				sb.WriteString("\t}\n")
 			}
 		}
